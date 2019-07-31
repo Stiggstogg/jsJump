@@ -4,6 +4,10 @@ var ctx = canvas.getContext("2d");                                  // get conte
 let width = canvas.width;                                           // get width of the canvas TODO: What happens if the window is resized during playing?
 let height = canvas.height;                                         // get height of the canvas TODO: What happens if the window is resized during playing?
 
+// game states
+var gameRunning = false;            // is game running?
+var gameStarted = false;            // is game started?
+
 // geek mode
 var geek = {
     mode: true,                     // if this is true stats (e.g. FPS) and console entries are shown
@@ -61,13 +65,14 @@ var lastFrameTimeMs = 0;        // time when the last frame was painted (ms)
 var fps = maxFPS;               // calculated fps (exponential moving average)
 var fpsThisSecond = 0;          // current FPS of this second
 var lastFpsUpdate = 0;          // Last fps update
+var frameID;                    // frame ID to cancel the animation
 
 // main game loop
 var gameLoop = function (timestamp) {
 
     // Define the frame rate (throttle the frame rate)
     if (timestamp < lastFrameTimeMs + (1000 / maxFPS)) {     // update and draw only if the time needed for the maximum FPS was passed
-        window.requestAnimationFrame(gameLoop);
+        frameID = window.requestAnimationFrame(gameLoop);
         return;
     }
     delta += timestamp - lastFrameTimeMs;                   // time elapsed between this and the last frame
@@ -97,7 +102,7 @@ var gameLoop = function (timestamp) {
     }
 
     draw(); // draw on the screen
-    window.requestAnimationFrame(gameLoop);                 // start the next frame
+    frameID = window.requestAnimationFrame(gameLoop);                 // start the next frame
 }
 
 // Too many updates: called by the mainLoop
@@ -108,5 +113,33 @@ var tooManyUpdates = function() {
     }
 }
 
-// Start loop
-window.requestAnimationFrame(gameLoop);
+// Start function to start the loop
+function start() {
+    if (!gameStarted) {                 // only start if it isn't yet started to avoid requesting multiple frames
+        gameStarted = true;             // set start to true
+        // Dummy frame to get timestamps and initial drawing right
+        frameID = window.requestAnimationFrame(function(timestamp){
+            draw();                     // initial drawing
+            gameRunning = true;          // set game state to running
+            lastFrameTimeMs = timestamp; // set the last frame time to initial value
+            lastFpsUpdate = timestamp;   // set the last fps time to initial value
+            fpsThisSecond = 0;           // reset the number of FPS for this second
+
+            // Actually start the main loop
+            frameID = window.requestAnimationFrame(gameLoop);
+        });
+    }
+}
+
+// Stop function to stop the loop
+function stop() {
+    gameRunning = false;
+    gameStarted = false;
+    window.cancelAnimationFrame(frameID);
+}
+
+// Events
+// TODO: Check here for variable gameRunning! To pause EventHandlers when not used
+
+// Start the game
+start();
