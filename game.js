@@ -17,25 +17,77 @@ var geek = {
     font: "12px Arial",             // style of the text
 };
 
+// Game Physics Variables
+var gravity = 500;           // gravity (px/s^2)
 
-var box = {                         // TODO: Example code: Remove!
-    length: 50,
-    x: 0,
-    y: 50,
-    speed: -0.0625,
-};
+
+// Create game objects
+// --------------------
+var playerSize = 0.03;
+var player = new PlayerCharacter(width*0.01, height-width*playerSize, width*playerSize, "rgb(255, 255, 255", 100);
+
+// Event listeners
+var leftPressed = false;
+var rightPressed = false;
+
+document.onkeydown = function(event) {
+    let keyPressed = event.key;
+    if (keyPressed == "ArrowRight"){
+        player.speedHoriz = player.maxSpeed;
+        rightPressed = true;
+    } else if (keyPressed == "ArrowLeft") {
+        player.speedHoriz = -player.maxSpeed;
+        leftPressed = true;
+    } else if (keyPressed == "ArrowUp") {
+        if (player.onGround) {
+            player.speedVert = player.jumpSpeed;
+            player.onGround = false;
+        }
+    }
+}
+
+document.onkeyup = function(event) {
+    let keyPressed = event.key;
+    if (keyPressed == "ArrowRight") {
+        rightPressed = false;
+        if (leftPressed) {
+            player.speedHoriz = -player.maxSpeed;
+        } else {
+            player.speedHoriz = 0;
+        }
+    } else if (keyPressed == "ArrowLeft") {
+        leftPressed = false;
+        if (rightPressed) {
+            player.speedHoriz = player.maxSpeed;
+        } else {
+            player.speedHoriz = 0;
+        }
+    }
+}
+
 
 // update: Update the game logic
 // -------------------------------
 
 var update = function (updateStep) {    // always include updateStep in your code, as this is the time passed between two updates
+    player.x += player.speedHoriz*updateStep/1000;
 
-    if (box.x <= 0 || box.x >= 50) {    // TODO: Example code: Remove!
-        box.speed *= -1;
+    // gravity slows down player vertical speed
+    if (!player.onGround) {
+        player.speedVert += -gravity*updateStep/1000;
+    } else {
+        player.speedVert = 0;
     }
-    box.x += box.speed*updateStep;
 
-}
+    // set player vertical position
+    player.y -= player.speedVert*updateStep/1000;
+
+    // check if player is on ground
+    if (height <= player.y + player.size) {
+        player.onGround = true;
+    }
+
+};
 
 // draw: Draw the game into the screen
 // ------------------------------------
@@ -50,8 +102,9 @@ var draw = function () {
         ctx.fillText("FPS: " + Math.round(fps), geek.x, geek.y);    // draw text
     }
 
-    ctx.fillStyle = "rgb(255, 255, 255)";                   // TODO: Example code: Remove!
-    ctx.fillRect(box.x, box.y, box.length, box.length);
+    // draw player
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.size, player.size);
 };
 
 // Main game loop
