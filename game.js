@@ -17,7 +17,8 @@ var geek = {
     font: "12px Arial",             // style of the text
 };
 
-var box = {
+
+var box = {                         // TODO: Example code: Remove!
     length: 50,
     x: 0,
     y: 50,
@@ -28,26 +29,28 @@ var box = {
 // -------------------------------
 
 var update = function (updateStep) {    // always include updateStep in your code, as this is the time passed between two updates
-    if (box.x <= 0 || box.x >= 50) {
+
+    if (box.x <= 0 || box.x >= 50) {    // TODO: Example code: Remove!
         box.speed *= -1;
     }
     box.x += box.speed*updateStep;
+
 }
 
 // draw: Draw the game into the screen
 // ------------------------------------
 
 var draw = function () {
-    ctx.clearRect(0,0,width,height);        // Clear context
+    ctx.clearRect(0,0,width,height);                              // Clear context
 
     // draw FPS
     if (geek.mode) {
-        ctx.fillStyle = geek.color;               // set color
-        ctx.font = geek.font;                     // set font
+        ctx.fillStyle = geek.color;                                      // set color
+        ctx.font = geek.font;                                            // set font
         ctx.fillText("FPS: " + Math.round(fps), geek.x, geek.y);    // draw text
     }
 
-    ctx.fillStyle = "rgb(255, 255, 255)";
+    ctx.fillStyle = "rgb(255, 255, 255)";                   // TODO: Example code: Remove!
     ctx.fillRect(box.x, box.y, box.length, box.length);
 };
 
