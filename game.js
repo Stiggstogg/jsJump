@@ -103,8 +103,6 @@ var enemyControler = function(step) {
             width * newEnemySize, "rgb(255, 255, 255)"));                                           // create a new enemy
         enemies[enemies.length - 1].addHorizSpeed(-worldSpeed);                                                 // set speed
     }
-
-
 }
 
 // update: Update the game logic
