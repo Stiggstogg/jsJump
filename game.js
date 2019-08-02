@@ -18,53 +18,67 @@ var geek = {
 };
 
 // Game Physics Variables
-var gravity = 500;           // gravity (px/s^2)
+var gravity = 0.833;           // gravity (width/s^2)
 
 
 // Create game objects
 // --------------------
 var playerSize = 0.03;
-var player = new PlayerCharacter(width*0.01, height-width*playerSize, width*playerSize, "rgb(255, 255, 255", 100);
+var player = new PlayerCharacter(width*0.01, height-width*playerSize, width*playerSize, "rgb(255, 255, 255", 0.167);
 
 // Event listeners
-var leftPressed = false;
-var rightPressed = false;
+var keyDown = {
+    left: false,
+    right: false,
+    up: false,
+};
 
 document.onkeydown = function(event) {
     let keyPressed = event.key;
     if (keyPressed == "ArrowRight"){
-        player.speedHoriz = player.maxSpeed;
-        rightPressed = true;
-    } else if (keyPressed == "ArrowLeft") {
-        player.speedHoriz = -player.maxSpeed;
-        leftPressed = true;
-    } else if (keyPressed == "ArrowUp") {
-        if (player.onGround) {
-            player.speedVert = player.jumpSpeed;
-            player.onGround = false;
+        player.speedHoriz = player.maxSpeed*width;
+        keyDown.right = true;
+        if (keyDown.up) {
+            player.jump();
         }
+    } else if (keyPressed == "ArrowLeft") {
+        player.speedHoriz = -player.maxSpeed * width;
+        keyDown.left = true;
+        if (keyDown.up) {
+            player.jump();
+        }
+    } else if ((keyPressed == "ArrowUp" || keyDown.up)  && player.onGround) {
+        player.jump();
+        keyDown.up = true;
     }
 }
 
 document.onkeyup = function(event) {
     let keyPressed = event.key;
     if (keyPressed == "ArrowRight") {
-        rightPressed = false;
-        if (leftPressed) {
-            player.speedHoriz = -player.maxSpeed;
+        keyDown.right = false;
+        if (keyDown.left) {
+            player.speedHoriz = -player.maxSpeed*width;
         } else {
             player.speedHoriz = 0;
+        }
+        if (keyDown.up) {
+            player.jump();
         }
     } else if (keyPressed == "ArrowLeft") {
-        leftPressed = false;
-        if (rightPressed) {
-            player.speedHoriz = player.maxSpeed;
+        keyDown.left = false;
+        if (keyDown.right) {
+            player.speedHoriz = player.maxSpeed*width;
         } else {
             player.speedHoriz = 0;
         }
+        if (keyDown.up) {
+            player.jump();
+        }
+    } else if (keyPressed = "ArrowUp") {
+        keyDown.up = false;
     }
 }
-
 
 // update: Update the game logic
 // -------------------------------
@@ -74,7 +88,7 @@ var update = function (updateStep) {    // always include updateStep in your cod
 
     // gravity slows down player vertical speed
     if (!player.onGround) {
-        player.speedVert += -gravity*updateStep/1000;
+        player.speedVert += -gravity*width*updateStep/1000;
     } else {
         player.speedVert = 0;
     }
@@ -85,6 +99,7 @@ var update = function (updateStep) {    // always include updateStep in your cod
     // check if player is on ground
     if (height <= player.y + player.size) {
         player.onGround = true;
+        player.y = height-player.size;
     }
 
 };

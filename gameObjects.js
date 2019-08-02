@@ -23,11 +23,17 @@ class GameCharacter {
 class PlayerCharacter extends GameCharacter{
     constructor (x, y, size , color, maxSpeed) {
         super(x, y, size, color);
-        this.speedHoriz = 0;
-        this.speedVert = 0;
-        this.jump = false;
-        this.maxSpeed = maxSpeed;                   // Horizontal speed in px/s
-        this.jumpSpeed = maxSpeed*3;                  // Vertical speed in px/s
+        this.speedHoriz = 0;                        // Horizontal speed in px/s
+        this.speedVert = 0;                         // Vertical speed in px/s
+        this.maxSpeed = maxSpeed;                   // Horizontal maximum speed in width/s
+        this.jumpSpeed = maxSpeed*3;                  // Vertical maximum speed in width/s
         this.onGround = true;
+    }
+
+    jump () {
+        if (this.onGround) {
+            this.speedVert = this.jumpSpeed * width;
+            this.onGround = false;
+        }
     }
 }
