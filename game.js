@@ -23,83 +23,70 @@ var gravity = 0.833;           // gravity (width/s^2)
 
 // Create game objects
 // --------------------
-var playerSize = 0.03;
-var player = new PlayerCharacter(width*0.01, height-width*playerSize, width*playerSize, "rgb(255, 255, 255", 0.167);
+var playerSize = 0.03;          // relative size of the player square (in fraction of the width)
+var player = new PlayerCharacter(width*0.01, height-width*playerSize, width*playerSize,
+    "rgb(255, 255, 255", 0.167);            // create the player character
 
 // Event listeners
+// --------------------
 var keyDown = {
     left: false,
     right: false,
     up: false,
 };
 
+// key down events (fires as long as the key is pressed and no other key is pressed)
 document.onkeydown = function(event) {
     let keyPressed = event.key;
-    if (keyPressed == "ArrowRight"){
-        player.speedHoriz = player.maxSpeed*width;
-        keyDown.right = true;
-        if (keyDown.up) {
-            player.jump();
-        }
-    } else if (keyPressed == "ArrowLeft") {
-        player.speedHoriz = -player.maxSpeed * width;
-        keyDown.left = true;
-        if (keyDown.up) {
-            player.jump();
-        }
-    } else if ((keyPressed == "ArrowUp" || keyDown.up)  && player.onGround) {
-        player.jump();
-        keyDown.up = true;
+    if (keyPressed == "ArrowRight" && !keyDown.right){          // only do this is key is not already pressed (only the first time the key is pressed)
+        keyDown.right = true;                                   // set trigger for key to true
+        player.addHorizSpeed(player.maxSpeed);                  // add horizontal speed (moving right)
+    } else if (keyPressed == "ArrowLeft" && !keyDown.left) {    // only do this is key is not already pressed (only the first time the key is pressed)
+        keyDown.left = true;                                    // set trigger for key to true
+        player.addHorizSpeed(-player.maxSpeed);                 // substract horizontal speed (moving left)
+    } else if (keyPressed == "ArrowUp") {                       // do this for as long as the key is pressed (no influence as continuous jumping should be possible)
+        keyDown.up = true;                                      // set trigger for key to true
     }
-}
+};
 
+// key up events (fires only once when the key is released)
 document.onkeyup = function(event) {
     let keyPressed = event.key;
     if (keyPressed == "ArrowRight") {
-        keyDown.right = false;
-        if (keyDown.left) {
-            player.speedHoriz = -player.maxSpeed*width;
-        } else {
-            player.speedHoriz = 0;
-        }
-        if (keyDown.up) {
-            player.jump();
-        }
+        keyDown.right = false;                                  // set the trigger for this key to false
+        player.addHorizSpeed(-player.maxSpeed);                 // substract the horizontal speed added before when the key was pressed (stop moving right)
     } else if (keyPressed == "ArrowLeft") {
-        keyDown.left = false;
-        if (keyDown.right) {
-            player.speedHoriz = player.maxSpeed*width;
-        } else {
-            player.speedHoriz = 0;
-        }
-        if (keyDown.up) {
-            player.jump();
-        }
+        keyDown.left = false;                                   // set the trigger for this key to false
+        player.addHorizSpeed(player.maxSpeed);                  // add the horizontal speed added before when the key was pressed (stop moving left)
     } else if (keyPressed = "ArrowUp") {
-        keyDown.up = false;
+        keyDown.up = false;                                     // set the trigger for this key to false
     }
-}
+};
 
 // update: Update the game logic
 // -------------------------------
 
 var update = function (updateStep) {    // always include updateStep in your code, as this is the time passed between two updates
-    player.x += player.speedHoriz*updateStep/1000;
 
-    // gravity slows down player vertical speed
+    // gravity slows down players vertical speed when he isn't on the ground
     if (!player.onGround) {
-        player.speedVert += -gravity*width*updateStep/1000;
+        player.addVertSpeed(-gravity*updateStep/1000);      // substract vertical speed based on the gravity
     } else {
-        player.speedVert = 0;
+        player.speedVert = 0;                                       // set vertical speed to 0 if the player stands on the ground
     }
 
-    // set player vertical position
-    player.y -= player.speedVert*updateStep/1000;
+    // Check if jump button is pressed (continuous jumping is possible therefor this is checked in the game loop)
+    if (keyDown.up) {
+        player.jump();                                              // perform the jump method (checks also if player is on the ground)
+    }
+
+    // set players new x and y position
+    player.setPosition(updateStep);                                 // set the players new x and y position based on the horizontal and vertical speeds
 
     // check if player is on ground
     if (height <= player.y + player.size) {
-        player.onGround = true;
-        player.y = height-player.size;
+        player.onGround = true;                                     // set the trigger for standing on the ground to true
+        player.y = height-player.size;                              // set the y-Position to the ground (avoids that the player is standing slightly below the ground)
     }
 
 };
