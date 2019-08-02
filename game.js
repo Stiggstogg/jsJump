@@ -1,5 +1,5 @@
 // canvas
-var canvas = document.getElementById("gameCanvas");        // get canvas by ID
+let canvas = document.getElementById("gameCanvas");        // get canvas by ID
 var ctx = canvas.getContext("2d");                                  // get context
 let width = canvas.width;                                           // get width of the canvas TODO: What happens if the window is resized during playing?
 let height = canvas.height;                                         // get height of the canvas TODO: What happens if the window is resized during playing?
@@ -17,15 +17,30 @@ var geek = {
     font: "12px Arial",             // style of the text
 };
 
-// Game Physics Variables
-var gravity = 0.833;           // gravity (width/s^2)
-
+// Fundamental game variables
+let gravity = 0.833;                // gravity (width/s^2)
+let worldStartSpeed = 0.05;         // world start speed (width/s)
+var worldSpeed = worldStartSpeed;   // world speed (width/s)
+let minEnemyDistance = 0.1;         // minimum distance between enemies (width)
+let maxEnemyDistance = 0.3;         // maximum distance between enemies (width)
+let minEnemySize = 0.03;            // minimum size of enemies (width)
+let maxEnemySize = 0.08;            // maximum size of enemies (width)
 
 // Create game objects
 // --------------------
 var playerSize = 0.03;          // relative size of the player square (in fraction of the width)
-var player = new PlayerCharacter(width*0.01, height-width*playerSize, width*playerSize,
-    "rgb(255, 255, 255", 0.167);            // create the player character
+var player = new PlayerCharacter(width*0.5, height-width*playerSize, width*playerSize,
+    "rgb(255, 255, 255)", 0.167);            // create the player character
+var enemies = [new GameCharacter(width, height-width*playerSize*1.5, width*playerSize*1.5,
+    "rgb(255, 255, 255)")];
+
+// Initialize game
+// --------------------
+let init = function () {
+    player.addHorizSpeed(-worldSpeed);      // set player speed to world speed
+    enemies[0].addHorizSpeed(-worldSpeed);  // set first enemy speed to world speed
+};
+
 
 // Event listeners
 // --------------------
@@ -63,6 +78,35 @@ document.onkeyup = function(event) {
     }
 };
 
+// Set enemies position, add new enemies, remove enemies
+var enemyControler = function(step) {
+
+    // set new position
+    enemies.forEach(function(element){
+        element.setPosition(step);
+    });
+
+    // remove enemies which left the screen
+    for (var i = 0; i < enemies.length; i++){
+        if (enemies[i].x + enemies[i].size < 0) {                  // check if an enemy left the screen on the left
+            enemies.splice(i,1);                                // remove the enemy
+            i--;                                                // decrease i by one to avoid skipping the next element
+        }
+    }
+
+    // check if new enemy is needed and add a new one
+    var lastEnemy = enemies[enemies.length-1];                                                                  // select last enemy
+    if (lastEnemy.x+lastEnemy.size+minEnemyDistance*width <= width) {                                           // check if the last enemy is more far away from the right side than the the minimum enemy distance (if yes, create a new enemy)
+        var newEnemySize = minEnemySize + Math.random() * (maxEnemySize - minEnemySize);                        // size of the new enemy should be random but within the limits
+        var newEnemyXPosition = Math.random() * (maxEnemyDistance - minEnemyDistance);       // distance of the enemy when spanning, relative to the right border
+        enemies.push(new GameCharacter(width + newEnemyXPosition*width, height - width * newEnemySize,
+            width * newEnemySize, "rgb(255, 255, 255)"));                                           // create a new enemy
+        enemies[enemies.length - 1].addHorizSpeed(-worldSpeed);                                                 // set speed
+    }
+
+
+}
+
 // update: Update the game logic
 // -------------------------------
 
@@ -89,6 +133,7 @@ var update = function (updateStep) {    // always include updateStep in your cod
         player.y = height-player.size;                              // set the y-Position to the ground (avoids that the player is standing slightly below the ground)
     }
 
+    enemyControler(updateStep);                                     // Execute the enemy controler to set enemies position, add new enemies, remove enemies
 };
 
 // draw: Draw the game into the screen
@@ -107,6 +152,12 @@ var draw = function () {
     // draw player
     ctx.fillStyle = player.color;
     ctx.fillRect(player.x, player.y, player.size, player.size);
+
+    // draw enemies
+    enemies.forEach(function(element){
+        ctx.fillStyle = element.color;
+        ctx.fillRect(element.x, element.y, element.size, element.size);
+    });
 };
 
 // Main game loop
@@ -177,11 +228,12 @@ function start() {
         gameStarted = true;             // set start to true
         // Dummy frame to get timestamps and initial drawing right
         frameID = window.requestAnimationFrame(function(timestamp){
-            draw();                     // initial drawing
-            gameRunning = true;          // set game state to running
-            lastFrameTimeMs = timestamp; // set the last frame time to initial value
-            lastFpsUpdate = timestamp;   // set the last fps time to initial value
-            fpsThisSecond = 0;           // reset the number of FPS for this second
+            init();
+            draw();                         // initial drawing
+            gameRunning = true;             // set game state to running
+            lastFrameTimeMs = timestamp;    // set the last frame time to initial value
+            lastFpsUpdate = timestamp;      // set the last fps time to initial value
+            fpsThisSecond = 0;              // reset the number of FPS for this second
 
             // Actually start the main loop
             frameID = window.requestAnimationFrame(gameLoop);
